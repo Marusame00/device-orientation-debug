@@ -313,3 +313,5 @@ Having issues?
 **Made with 🔬 for debugging sensor mysteries**
 
 *Works best on mobile devices with motion sensors*
+
+Vibe Coded with abacus.ai
