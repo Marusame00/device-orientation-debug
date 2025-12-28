@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Device Orientation Debug</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050510;
+      color: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: #111322;
+      border-radius: 16px;
+      border: 1px solid #2d3650;
+      padding: 20px 18px 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #a0a6c5;
+      margin-bottom: 16px;
+    }
+    .status {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid #444b6a;
+      background: #181b2a;
+      margin-bottom: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ffb020;
+    }
+    .status.active .dot { background: #22c55e; }
+    .status.error .dot { background: #ff4d4f; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metric {
+      background: #151728;
+      border-radius: 10px;
+      padding: 10px 10px 8px;
+      border: 1px solid #242840;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: #9ca3c7;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .metric-value {
+      font-size: 16px;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-units {
+      font-size: 11px;
+      color: #6b7280;
+      margin-left: 4px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .row .metric {
+      flex: 1;
+    }
+
+    .event-count {
+      font-size: 12px;
+      color: #9ca3c7;
+      margin-bottom: 8px;
+    }
+
+    .log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      background: #090a14;
+      border-radius: 8px;
+      padding: 8px;
+      border: 1px solid #242840;
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    button {
+      flex: 1;
+      min-width: 130px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: white;
+      box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #374151;
+      color: #e5e7eb;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #9ca3c7;
+    }
+    .note strong {
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Device Orientation Debug</h1>
+    <div class="subtitle">Test alpha / beta / gamma sensor values in real time.</div>
+
+    <div class="status" id="status">
+      <span class="dot"></span>
+      <span id="statusText">Idle – tap “Start”</span>
+    </div>
+
+    <div class="row">
+      <div class="metric">
+        <div class="metric-label">Events</div>
+        <div class="metric-value">
+          <span id="eventsCount">0</span>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Last update</div>
+        <div class="metric-value">
+          <span id="lastUpdate">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="metric">
+        <div class="metric-label">Alpha (Z)</div>
+        <div class="metric-value">
+          <span id="alphaVal">—</span>
+          <span class="metric-units">deg</span>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Beta (X)</div>
+        <div class="metric-value">
+          <span id="betaVal">—</span>
+          <span class="metric-units">deg</span>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Gamma (Y)</div>
+        <div class="metric-value">
+          <span id="gammaVal">—</span>
+          <span class="metric-units">deg</span>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Absolute</div>
+        <div class="metric-value">
+          <span id="absoluteVal">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-count">
+      Debug log:
+    </div>
+    <div class="log" id="logBox"></div>
+
+    <div class="button-row">
+      <button class="btn-primary" id="startBtn">Start</button>
+      <button class="btn-secondary" id="stopBtn" disabled>Stop</button>
+    </div>
+
+    <div class="note">
+      <strong>Notes:</strong> Requires HTTPS (or localhost) and motion sensor support.
+      On iOS, you may see a permission prompt; on Android, enable motion sensors in browser settings if values stay “—”.
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+    const eventsCountEl = document.getElementById('eventsCount');
+    const lastUpdateEl = document.getElementById('lastUpdate');
+
+    const alphaEl = document.getElementById('alphaVal');
+    const betaEl = document.getElementById('betaVal');
+    const gammaEl = document.getElementById('gammaVal');
+    const absEl = document.getElementById('absoluteVal');
+    const logBox = document.getElementById('logBox');
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    let eventsCount = 0;
+    let listening = false;
+    let lastLogTime = 0;
+
+    function setStatus(mode, text) {
+      statusEl.classList.remove('active', 'error');
+      if (mode === 'active') statusEl.classList.add('active');
+      if (mode === 'error') statusEl.classList.add('error');
+      statusText.textContent = text;
+    }
+
+    function appendLog(line) {
+      const now = Date.now();
+      // Throttle high-frequency events to keep UI readable
+      if (now - lastLogTime < 200 && eventsCount > 5) return;
+      lastLogTime = now;
+
+      const ts = new Date().toLocaleTimeString();
+      logBox.textContent =
+        `[${ts}] ${line}\n` + logBox.textContent;
+
+      // Keep log from growing endlessly
+      if (logBox.textContent.length > 4000) {
+        logBox.textContent = logBox.textContent.slice(0, 4000);
+      }
+    }
+
+    function handleOrientation(e) {
+      eventsCount++;
+      eventsCountEl.textContent = eventsCount.toString();
+
+      const a = e.alpha != null ? e.alpha.toFixed(1) : '—';
+      const b = e.beta  != null ? e.beta.toFixed(1)  : '—';
+      const g = e.gamma != null ? e.gamma.toFixed(1) : '—';
+      const abs = e.absolute != null ? String(e.absolute) : '—';
+
+      alphaEl.textContent = a;
+      betaEl.textContent = b;
+      gammaEl.textContent = g;
+      absEl.textContent = abs;
+
+      const ts = new Date().toLocaleTimeString();
+      lastUpdateEl.textContent = ts;
+
+      appendLog(`α=${a}°, β=${b}°, γ=${g}°, abs=${abs}`);
+    }
+
+    function startListening() {
+      if (listening) return;
+
+      eventsCount = 0;
+      eventsCountEl.textContent = '0';
+      lastUpdateEl.textContent = '—';
+      alphaEl.textContent = betaEl.textContent = gammaEl.textContent = '—';
+      absEl.textContent = '—';
+      logBox.textContent = '';
+
+      listening = true;
+      setStatus('active', 'Listening for deviceorientation…');
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+
+      window.addEventListener('deviceorientation', handleOrientation);
+
+      // Fallback check if no events after 3 seconds
+      setTimeout(() => {
+        if (!listening) return;
+        if (eventsCount === 0) {
+          setStatus('error', 'No events received – check HTTPS & browser sensor settings');
+          appendLog('No deviceorientation events received after 3 seconds.');
+        }
+      }, 3000);
+    }
+
+    function stopListening() {
+      if (!listening) return;
+      listening = false;
+      window.removeEventListener('deviceorientation', handleOrientation);
+      setStatus('idle', 'Stopped – tap “Start” to listen again');
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    startBtn.addEventListener('click', () => {
+      // iOS 13+ requires permission request from a user gesture
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') {
+              startListening();
+            } else {
+              setStatus('error', 'Permission denied – enable motion access in Settings');
+              appendLog('Permission denied by user / OS.');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            setStatus('error', 'Error requesting permission');
+            appendLog('Error requesting permission: ' + err);
+          });
+      } else {
+        // Android / other browsers
+        startListening();
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopListening();
+    });
+
+    // Initial status
+    setStatus('idle', 'Idle – tap “Start”');
+  </script>
+</body>
+</html>
