@@ -28,9 +28,8 @@ This tool helps you:
 
 ## 🚀 Live Demo
 
-Visit: `https://yourusername.github.io/device-orientation-debug/`
+Visit: `https://marusame00.github.io/device-orientation-debug/`
 
-*(Replace `yourusername` with your actual GitHub username)*
 
 ## 📱 How to Use
 
