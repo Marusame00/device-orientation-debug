@@ -28,7 +28,10 @@ This tool helps you:
 
 ## 🚀 Live Demo
 
-Visit: `https://marusame00.github.io/device-orientation-debug/`
+Visit: 
+```text
+https://marusame00.github.io/device-orientation-debug/
+```
 
 
 ## 📱 How to Use
